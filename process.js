@@ -1,11 +1,10 @@
 const fs = require("fs");
+const clc = require("cli-color");
 const { joiValidation } = require("./validation");
 const editJsonFile = require("edit-json-file");
 
-const dataBuffer = fs.readFileSync("article.json");
-const article = JSON.parse(dataBuffer);
-
-console.log("JOI VALIDATION\n");
+console.log(clc.bgRed("JOI VALIDATION"));
+console.log("--- ----------\n");
 
 const writeJSONFile = (name, data) => {
   const jsonFile = editJsonFile(`${name}.json`);
@@ -13,15 +12,25 @@ const writeJSONFile = (name, data) => {
   jsonFile.save();
 };
 
-const validateArticle = (article) => {
-  try {
-    joiValidation(article);
-    console.log("OK");
-    writeJSONFile("db", article);
-  } catch (error) {
-    console.log(error.message);
-    writeJSONFile("invalid", article);
+fs.readdir("articles", function (err, files) {
+  if (err) {
+    onError(err);
+    return;
   }
-};
+  files.forEach((file) => {
+    const dataBuffer = fs.readFileSync(`articles/${file}`);
+    const article = JSON.parse(dataBuffer);
+    console.log(clc.yellowBright(`Validating ${file}`));
 
-validateArticle(article);
+    try {
+      joiValidation(article);
+      console.log(clc.greenBright("Validation Passed"));
+      writeJSONFile("db", article);
+    } catch (error) {
+      console.log(error.message);
+      console.log(clc.redBright("Validation Failed"));
+      writeJSONFile("invalid", article);
+    }
+    console.log("---------- ------\n");
+  });
+});

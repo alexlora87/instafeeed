@@ -1,34 +1,58 @@
 {
   "invalid": [
     {
-      "id": "4a71a08a-b31e-427e-84f3-127a1273ffd2",
-      "title": "Understanding Node.js File System Module",
-      "url": "https://levelup.gitconnected.com/understanding-node-js-file-system-module-b16da1e01949",
-      "keywords": [
-        "Nodejs",
-        "Filesystem",
-        "Code"
-      ],
-      "modifiedAt": "06/24/2019",
-      "publishedAt": "06/24/2019",
-      "author": "Swathi Prasad",
-      "readMins": 3,
-      "source": "BLOGx"
+      "id": "22ca4ccf-8d14-4035-9cbb-c1d0aee5ef38",
+      "title": "Understanding JavaScript Promises",
+      "url": "https://nodejs.dev/learn/understanding-javascript-promises",
+      "keywords": [],
+      "modifiedAt": "02/10/2021",
+      "author": "nodejs.dev",
+      "readMins": 0,
+      "source": "ARTICLE"
     },
     {
-      "id": "4a71a08a-b31e-427e-84f3-127a1273ffd2",
-      "title": "Understanding Node.js File System Module",
-      "url": "https://levelup.gitconnected.com/understanding-node-js-file-system-module-b16da1e01949",
+      "id": "2d77b0c6-858f-407f-a518-58371ac9adcb",
+      "title": "Promises in Node.js",
+      "url": "https://www.geeksforgeeks.org/promises-in-node-js/",
       "keywords": [
-        "Nodejs",
-        "Filesystem",
-        "Code"
+        "JavaScript",
+        "Async"
       ],
-      "modifiedAt": "06/24/2019",
-      "publishedAt": "06/24/2019",
-      "author": "Swathi Prasad",
-      "readMins": 22,
+      "modifiedAt": "07/13/2019",
+      "publishedAt": "07/13/2019",
+      "author": "",
+      "readMins": 3,
       "source": "BLOG"
+    },
+    {
+      "id": "",
+      "title": "Promises in Node.js: An alternative to callbacks",
+      "url": "http://developer.ibm.com/languages/node-js/articles/promises-in-nodejs-an-alternative-to-callbacks/",
+      "keywords": [
+        "JavaScript",
+        "Nodejs",
+        "Callback",
+        "Promise"
+      ],
+      "modifiedAt": "06/20/2019",
+      "publishedAt": "06/20/2022",
+      "author": "Marc Harter at IBM Developer",
+      "source": "ARTICLE"
+    },
+    {
+      "id": "123",
+      "title": "Writing neat asynchronous Node JS code with Promises",
+      "url": "http://medium.com/dev-bits/writing-neat-asynchronous-node-js-code-with-promises-32ed3a4fd098",
+      "keywords": [
+        "",
+        "Nodejs",
+        "Promises"
+      ],
+      "modifiedAt": "06/04/2017",
+      "publishedAt": "06/04/2017",
+      "author": "Naren Yellavula",
+      "readMins": -8,
+      "source": "UNKNOWN"
     }
   ]
 }
