@@ -1,11 +1,17 @@
 const validator = require("validator");
 const moment = require("moment");
 const clc = require("cli-color");
+const Joi = require("joi");
+
+/**
+ * UTILS
+ */
 
 const articleProp = {
   idLength: 36,
   titleMaxLength: 255,
   authorMaxLength: 100,
+  keywordsSize: [1, 3],
   readMins: [1, 20],
   dateFormat: "MM/DD/YYYY",
 };
@@ -19,6 +25,16 @@ const sources = {
 
 const isValidDateFormat = (date) =>
   moment(date, articleProp.dateFormat, true).isValid();
+
+const isValidSource = (source) => sources[source] != null;
+
+const logInfo = (text) => console.log(`- ${text}`);
+const logSuccess = () => console.log(clc.green("☑ OK"));
+const logError = (text) => console.log(`${clc.red("☒")} ${text}`);
+
+/**
+ * MANUAL VALIDATION
+ */
 
 const articleAllowedFields = [
   "id",
@@ -39,10 +55,6 @@ const articleRequiredFields = [
   "readMins",
   "source",
 ];
-
-const logInfo = (text) => console.log(`- ${text}`);
-const logSuccess = () => console.log(clc.green("☑ OK"));
-const logError = (text) => console.log(`${clc.red("☒")} ${text}`);
 
 const validateStructure = (fields) =>
   Object.keys(fields).every((field) => articleAllowedFields.includes(field));
@@ -69,7 +81,7 @@ function validateFields(fields) {
   return structure && required;
 }
 
-function validateId(id) {
+const validateId = (id) => {
   logInfo("ID");
 
   if (id != null) {
@@ -91,9 +103,9 @@ function validateId(id) {
     logError(`Id cannot be null`);
     return false;
   }
-}
+};
 
-function validateMaxLength(propName, propValue, maxLength) {
+const validateMaxLength = (propName, propValue, maxLength) => {
   logInfo(propName);
 
   if (propValue != null) {
@@ -115,9 +127,9 @@ function validateMaxLength(propName, propValue, maxLength) {
     logError(`${propName} cannot be null`);
     return false;
   }
-}
+};
 
-function validateModified(date) {
+const validateModified = (date) => {
   logInfo("Modified At");
 
   if (isValidDateFormat(date)) {
@@ -132,9 +144,9 @@ function validateModified(date) {
     logError("Invalid date format: use MM/DD/YYYY");
     return false;
   }
-}
+};
 
-function validatePublished(date) {
+const validatePublished = (date) => {
   if (date != null && date.trim().length > 0) {
     logInfo("Published At");
 
@@ -151,9 +163,9 @@ function validatePublished(date) {
       return false;
     }
   }
-}
+};
 
-function validateURL(url) {
+const validateURL = (url) => {
   if (url != null && url.trim().length > 0) {
     logInfo("URL");
 
@@ -165,14 +177,15 @@ function validateURL(url) {
       return false;
     }
   }
-}
+};
 
-function validateKeywords(keywords) {
+const validateKeywords = (keywords) => {
   logInfo("Keywords");
 
   if (Array.isArray(keywords)) {
-    if (keywords.length < 1 || keywords.length > 3) {
-      logError("Keywords size must be between 1 and 3");
+    const [min, max] = articleProp.keywordsSize;
+    if (keywords.length < min || keywords.length > max) {
+      logError(`Keywords size must be between ${min} and ${max}`);
       return false;
     } else {
       let keywordError = false;
@@ -199,9 +212,9 @@ function validateKeywords(keywords) {
     logError("Keywords must be a list");
     return false;
   }
-}
+};
 
-function validateReadMins(readMins) {
+const validateReadMins = (readMins) => {
   const [min, max] = articleProp.readMins;
   if (readMins != null) {
     logInfo("Read Mins");
@@ -222,21 +235,21 @@ function validateReadMins(readMins) {
     logError("Only numbers allowed");
     return false;
   }
-}
+};
 
-function validateSource(source) {
+const validateSource = (source) => {
   logInfo("Source");
 
-  if (sources[source] != null) {
+  if (isValidSource(source)) {
     logSuccess();
     return true;
   } else {
     logError("Provided source is not valid");
     return false;
   }
-}
+};
 
-function validateJSON(article) {
+const manualValidation = (article) => {
   console.log(clc.blueBright("Validating JSON structure"));
   const fields = validateFields(article);
   const id = validateId(article.id);
@@ -269,6 +282,62 @@ function validateJSON(article) {
     readMins &&
     source
   );
-}
+};
 
-module.exports = validateJSON;
+/**
+ * JOI VALIDATION
+ */
+
+const dateValidation = (date) => {
+  if (isValidDateFormat(date)) {
+    if (new Date() <= new Date(date)) {
+      throw new Error("Modified At cannot be later than the Current Date");
+    } else {
+      return date;
+    }
+  } else {
+    throw new Error("Invalid date format: use MM/DD/YYYY");
+  }
+};
+
+const sourceValidation = (source, helpers) => {
+  if (isValidSource(source)) {
+    return source;
+  } else {
+    return helpers.error("any.invalid");
+  }
+};
+
+const articleSchema = Joi.object({
+  id: Joi.string().length(articleProp.idLength).required(),
+  title: Joi.string().max(articleProp.titleMaxLength).required(),
+  author: Joi.string().max(articleProp.authorMaxLength).required(),
+  modifiedAt: Joi.string().custom(dateValidation).required(),
+  publishedAt: Joi.string().allow(null, "").custom(dateValidation),
+  url: Joi.string().allow(null, "").uri(),
+  keywords: Joi.array()
+    .items(Joi.string())
+    .min(articleProp.keywordsSize[0])
+    .max(articleProp.keywordsSize[1]),
+  readMins: Joi.number()
+    .integer()
+    .min(articleProp.readMins[0])
+    .max(articleProp.readMins[1])
+    .required(),
+  source: Joi.string().custom(sourceValidation).required(),
+});
+
+const joiValidation = (article) => {
+  try {
+    Joi.assert(article, articleSchema);
+    logInfo("Structure");
+    logSuccess();
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+module.exports = {
+  manualValidation,
+  joiValidation,
+};

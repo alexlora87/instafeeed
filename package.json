@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "cli-color": "^2.0.1",
+    "joi": "^17.6.0",
     "moment": "^2.29.1",
     "validator": "^13.7.0"
   }
