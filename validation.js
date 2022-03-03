@@ -327,15 +327,7 @@ const articleSchema = Joi.object({
   source: Joi.string().custom(sourceValidation).required(),
 });
 
-const joiValidation = (article) => {
-  try {
-    Joi.assert(article, articleSchema);
-    logInfo("Structure");
-    logSuccess();
-  } catch (error) {
-    console.log(error.message);
-  }
-};
+const joiValidation = (article) => Joi.assert(article, articleSchema);
 
 module.exports = {
   manualValidation,

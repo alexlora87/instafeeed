@@ -1,15 +1,27 @@
 const fs = require("fs");
-const { manualValidation, joiValidation } = require("./validation");
+const { joiValidation } = require("./validation");
+const editJsonFile = require("edit-json-file");
 
 const dataBuffer = fs.readFileSync("article.json");
 const article = JSON.parse(dataBuffer);
 
-console.log("MANUAL VALIDATION\n");
-
-manualValidation(article);
-
-console.log("\n*******************************************************\n");
-
 console.log("JOI VALIDATION\n");
 
-joiValidation(article);
+const writeJSONFile = (name, data) => {
+  const jsonFile = editJsonFile(`${name}.json`);
+  jsonFile.append(name, data);
+  jsonFile.save();
+};
+
+const validateArticle = (article) => {
+  try {
+    joiValidation(article);
+    console.log("OK");
+    writeJSONFile("db", article);
+  } catch (error) {
+    console.log(error.message);
+    writeJSONFile("invalid", article);
+  }
+};
+
+validateArticle(article);
