@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "process": "node process.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,6 +29,7 @@
   "dependencies": {
     "cli-color": "^2.0.1",
     "edit-json-file": "^1.7.0",
+    "express": "^4.17.3",
     "joi": "^17.6.0",
     "moment": "^2.29.1",
     "validator": "^13.7.0"
