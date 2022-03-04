@@ -32,9 +32,13 @@
     "express": "^4.17.3",
     "joi": "^17.6.0",
     "moment": "^2.29.1",
+    "mongo-express-req": "^4.3.0",
+    "mongodb": "^4.4.1",
     "validator": "^13.7.0"
   },
   "nodemonConfig": {
-    "ignore": ["*.json"]
+    "ignore": [
+      "*.json"
+    ]
   }
 }
