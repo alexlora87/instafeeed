@@ -1,5 +1,7 @@
 const { MongoClient } = require("mongodb");
 const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
 const mongoExpressReq = require("mongo-express-req");
 const articleRouter = require("./routers/article");
 const authorRouter = require("./routers/author");
@@ -14,6 +16,8 @@ const startExpress = () => {
   const app = express();
   const port = process.env.PORT || 8080;
 
+  app.use(cors());
+  app.use(helmet());
   app.use(express.json());
   app.use(mongoExpressReq(url, config));
   app.use(articleRouter);
