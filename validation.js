@@ -37,7 +37,7 @@ const logError = (text) => console.log(`${clc.red("☒")} ${text}`);
  */
 
 const articleAllowedFields = [
-  "id",
+  "_id",
   "title",
   "author",
   "modifiedAt",
@@ -48,7 +48,7 @@ const articleAllowedFields = [
   "source",
 ];
 const articleRequiredFields = [
-  "id",
+  "_id",
   "title",
   "author",
   "modifiedAt",
@@ -252,7 +252,7 @@ const validateSource = (source) => {
 const manualValidation = (article) => {
   console.log(clc.blueBright("Validating JSON structure"));
   const fields = validateFields(article);
-  const id = validateId(article.id);
+  const id = validateId(article._id);
   const title = validateMaxLength(
     "Title",
     article.title,
@@ -309,7 +309,7 @@ const sourceValidation = (source, helpers) => {
 };
 
 const articleSchema = Joi.object({
-  id: Joi.string().length(articleProp.idLength).required(),
+  _id: Joi.string().length(articleProp.idLength).required(),
   title: Joi.string().max(articleProp.titleMaxLength).required(),
   author: Joi.string().max(articleProp.authorMaxLength).required(),
   modifiedAt: Joi.string().custom(dateValidation).required(),

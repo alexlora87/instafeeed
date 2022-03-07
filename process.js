@@ -6,6 +6,17 @@ const editJsonFile = require("edit-json-file");
 console.log(clc.bgRed("JOI VALIDATION"));
 console.log("--- ----------\n");
 
+const fixIdKey = (article) => {
+  if (article.hasOwnProperty("id")) {
+    const id = article["id"];
+    delete article["id"];
+    const editedArticle = Object.assign({ _id: id }, article);
+    return editedArticle;
+  } else {
+    return article;
+  }
+};
+
 const writeJSONFile = (name, data) => {
   const jsonFile = editJsonFile(`${name}.json`);
   jsonFile.append(name, data);
@@ -19,7 +30,8 @@ fs.readdir("articles", function (err, files) {
   }
   files.forEach((file) => {
     const dataBuffer = fs.readFileSync(`articles/${file}`);
-    const article = JSON.parse(dataBuffer);
+    const articleParse = JSON.parse(dataBuffer);
+    const article = fixIdKey(articleParse);
     console.log(clc.yellowBright(`Validating ${file}`));
 
     try {

@@ -34,6 +34,7 @@
     "moment": "^2.29.1",
     "mongo-express-req": "^4.3.0",
     "mongodb": "^4.4.1",
+    "uuid": "^8.3.2",
     "validator": "^13.7.0"
   },
   "nodemonConfig": {
