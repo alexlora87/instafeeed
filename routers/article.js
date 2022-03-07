@@ -5,7 +5,9 @@ const { validate, v4: uuidv4 } = require("uuid");
 
 const dbName = "instafeed";
 
-const articleCollection = (req) => req.db.db(dbName).collection("articles");
+const getDB = (req) => req.db.db(dbName);
+const articleCollection = (req) => getDB(req).collection("articles");
+const authorCollection = (req) => getDB(req).collection("authors");
 
 const replaceOrAssignId = (article) => {
   if (!article.hasOwnProperty("id") && !article.hasOwnProperty("_id")) {
@@ -34,10 +36,20 @@ const articleToEdit = (article, values) => {
   return Object.assign(values, article);
 };
 
+const isValidAuthorId = async (req, id) => {
+  const authorsCollection = authorCollection(req);
+  const author = await authorsCollection.find({ _id: id }).toArray();
+  return author.length > 0;
+};
+
 router.post("/articles", async (req, res) => {
   const _article = replaceOrAssignId(req.body);
 
   try {
+    if ((await isValidAuthorId(req, _article.author)) != true) {
+      return res.status(404).send("Author ID not found");
+    }
+
     joiValidation(_article);
     await articleCollection(req).insertOne(_article);
     res.status(201).send(_article);
@@ -50,11 +62,11 @@ router.get("/articles", async (req, res) => {
   try {
     const articles = await articleCollection(req).find().toArray();
 
-    if (articles.length > 0) {
-      res.send(articles);
-    } else {
-      res.status(404).send();
+    if (articles.length < 1) {
+      return res.status(404).send();
     }
+
+    res.send(articles);
   } catch (error) {
     res.status(400).send(error);
   }
@@ -67,11 +79,11 @@ router.get("/articles/:id", async (req, res) => {
     const articlesCollection = articleCollection(req);
     const article = await articlesCollection.find({ _id }).toArray();
 
-    if (article.length > 0) {
-      res.send(article);
-    } else {
-      res.status(404).send();
+    if (article.length < 1) {
+      return res.status(404).send();
     }
+
+    res.send(article);
   } catch (error) {
     res.status(400).send(error);
   }
@@ -85,13 +97,16 @@ router.put("/articles/:id", async (req, res) => {
     const articlesCollection = articleCollection(req);
     const article = await articlesCollection.find({ _id }).toArray();
 
-    if (article.length > 0) {
-      joiValidation(_values);
-      await articlesCollection.findOneAndUpdate({ _id }, { $set: _values });
-      res.status(200).send();
-    } else {
-      res.status(404).send();
+    if (article.length < 1) {
+      return res.status(404).send();
     }
+    if ((await isValidAuthorId(req, _values.author)) != true) {
+      return res.status(404).send("Author ID not found");
+    }
+
+    joiValidation(_values);
+    await articlesCollection.findOneAndUpdate({ _id }, { $set: _values });
+    res.status(200).send();
   } catch (error) {
     res.status(400).send(error);
   }
@@ -105,14 +120,19 @@ router.patch("/articles/:id", async (req, res) => {
     const articlesCollection = await articleCollection(req);
     const article = await articlesCollection.find({ _id }).toArray();
 
-    if (article.length > 0) {
-      const editedArticle = articleToEdit(article[0], _values);
-      joiValidation(editedArticle);
-      await articlesCollection.findOneAndUpdate({ _id }, { $set: _values });
-      res.status(200).send();
-    } else {
-      res.status(404).send();
+    if (article.length < 1) {
+      return res.status(404).send();
     }
+    if (_values.hasOwnProperty("author")) {
+      if ((await isValidAuthorId(req, _values.author)) != true) {
+        return res.status(404).send("Author ID not found");
+      }
+    }
+
+    const editedArticle = articleToEdit(article[0], _values);
+    joiValidation(editedArticle);
+    await articlesCollection.findOneAndUpdate({ _id }, { $set: _values });
+    res.status(200).send();
   } catch (error) {
     res.status(400).send(error);
   }
@@ -125,12 +145,12 @@ router.delete("/articles/:id", async (req, res) => {
     const articlesCollection = articleCollection(req);
     const article = await articlesCollection.find({ _id }).toArray();
 
-    if (article.length > 0) {
-      await articlesCollection.deleteOne({ _id });
-      res.status(204).send();
-    } else {
-      res.status(404).send();
+    if (article.length < 1) {
+      return res.status(404).send();
     }
+
+    await articlesCollection.deleteOne({ _id });
+    res.status(204).send();
   } catch (error) {
     res.status(400).send(error);
   }

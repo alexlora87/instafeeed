@@ -258,11 +258,7 @@ const manualValidation = (article) => {
     article.title,
     articleProp.titleMaxLength
   );
-  const author = validateMaxLength(
-    "Author",
-    article.author,
-    articleProp.authorMaxLength
-  );
+  const author = validateId(article.author);
   const modifiedAt = validateModified(article.modifiedAt);
   const publishedAt = validatePublished(article.publishedAt);
   const url = validateURL(article.url);
@@ -311,7 +307,7 @@ const sourceValidation = (source, helpers) => {
 const articleSchema = Joi.object({
   _id: Joi.string().length(articleProp.idLength).required(),
   title: Joi.string().max(articleProp.titleMaxLength).required(),
-  author: Joi.string().max(articleProp.authorMaxLength).required(),
+  author: Joi.string().length(articleProp.idLength).required(),
   modifiedAt: Joi.string().custom(dateValidation).required(),
   publishedAt: Joi.string().allow(null, "").custom(dateValidation),
   url: Joi.string().allow(null, "").uri(),
