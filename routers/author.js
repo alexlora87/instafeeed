@@ -6,12 +6,13 @@ const dbName = "instafeed";
 
 const getDB = (req) => req.db.db(dbName);
 const authorCollection = (req) => getDB(req).collection("authors");
+const articleCollection = (req) => getDB(req).collection("articles");
 
 router.post("/authors", async (req, res) => {
   const _author = Object.assign({ _id: uuidv4() }, req.body);
 
   try {
-    await authorCollection(req).insertOne(_author);
+    authorCollection(req).insertOne(_author);
     res.status(201).send(_author);
   } catch (error) {
     res.status(400).send(error);
@@ -61,7 +62,7 @@ router.put("/authors/:id", async (req, res) => {
       return res.status(404).send();
     }
 
-    await authorsCollection.findOneAndUpdate({ _id }, { $set: _values });
+    authorsCollection.findOneAndUpdate({ _id }, { $set: _values });
     res.status(200).send();
   } catch (error) {
     res.status(400).send(error);
@@ -79,7 +80,15 @@ router.delete("/authors/:id", async (req, res) => {
       return res.status(404).send();
     }
 
-    await authorsCollection.deleteOne({ _id });
+    const articles = author[0].articles;
+    if (articles.length > 0) {
+      const articlesCollection = articleCollection(req);
+      author[0].articles.forEach((article) => {
+        articlesCollection.deleteOne({ _id: article });
+      });
+    }
+
+    authorsCollection.deleteOne({ _id });
     res.status(204).send();
   } catch (error) {
     res.status(400).send(error);

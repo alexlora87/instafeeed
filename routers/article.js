@@ -1,6 +1,6 @@
 const express = require("express");
 const router = new express.Router();
-const { joiValidation } = require("../validation");
+const { validateArticle } = require("../validation");
 const { validate, v4: uuidv4 } = require("uuid");
 
 const dbName = "instafeed";
@@ -36,22 +36,32 @@ const articleToEdit = (article, values) => {
   return Object.assign(values, article);
 };
 
-const isValidAuthorId = async (req, id) => {
+const getAuthorId = async (req, id) => {
   const authorsCollection = authorCollection(req);
   const author = await authorsCollection.find({ _id: id }).toArray();
-  return author.length > 0;
+  if (author.length > 0) {
+    return author[0]._id;
+  } else {
+    return null;
+  }
 };
 
 router.post("/articles", async (req, res) => {
   const _article = replaceOrAssignId(req.body);
 
   try {
-    if ((await isValidAuthorId(req, _article.author)) != true) {
+    const authorId = await getAuthorId(req, _article.author);
+    if (authorId == null) {
       return res.status(404).send("Author ID not found");
     }
 
-    joiValidation(_article);
-    await articleCollection(req).insertOne(_article);
+    authorCollection(req).updateOne(
+      { _id: authorId },
+      { $addToSet: { articles: _article._id } }
+    );
+
+    validateArticle(_article);
+    articleCollection(req).insertOne(_article);
     res.status(201).send(_article);
   } catch (error) {
     res.status(400).send(error);
@@ -100,12 +110,14 @@ router.put("/articles/:id", async (req, res) => {
     if (article.length < 1) {
       return res.status(404).send();
     }
-    if ((await isValidAuthorId(req, _values.author)) != true) {
+
+    const authorId = await getAuthorId(req, _values.author);
+    if (authorId == null) {
       return res.status(404).send("Author ID not found");
     }
 
-    joiValidation(_values);
-    await articlesCollection.findOneAndUpdate({ _id }, { $set: _values });
+    validateArticle(_values);
+    articlesCollection.findOneAndUpdate({ _id }, { $set: _values });
     res.status(200).send();
   } catch (error) {
     res.status(400).send(error);
@@ -117,21 +129,24 @@ router.patch("/articles/:id", async (req, res) => {
   const _values = req.body;
 
   try {
-    const articlesCollection = await articleCollection(req);
+    const articlesCollection = articleCollection(req);
     const article = await articlesCollection.find({ _id }).toArray();
 
     if (article.length < 1) {
       return res.status(404).send();
     }
+
+    let authorId;
     if (_values.hasOwnProperty("author")) {
-      if ((await isValidAuthorId(req, _values.author)) != true) {
+      authorId = await getAuthorId(req, _values.author);
+      if (authorId == null) {
         return res.status(404).send("Author ID not found");
       }
     }
 
     const editedArticle = articleToEdit(article[0], _values);
-    joiValidation(editedArticle);
-    await articlesCollection.findOneAndUpdate({ _id }, { $set: _values });
+    validateArticle(editedArticle);
+    articlesCollection.findOneAndUpdate({ _id }, { $set: _values });
     res.status(200).send();
   } catch (error) {
     res.status(400).send(error);
@@ -149,7 +164,13 @@ router.delete("/articles/:id", async (req, res) => {
       return res.status(404).send();
     }
 
-    await articlesCollection.deleteOne({ _id });
+    const authorsCollection = authorCollection(req);
+    authorsCollection.updateOne(
+      { _id: article[0].author },
+      { $pull: { articles: article[0]._id } }
+    );
+
+    articlesCollection.deleteOne({ _id });
     res.status(204).send();
   } catch (error) {
     res.status(400).send(error);
